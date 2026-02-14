@@ -1,103 +1,78 @@
-"""This module contains the function's business logic.
-
-Use the automation_context module to wrap your function in an Automate context helper.
+"""
+Chat-GPT Aurora - Speckle Automate Function
+Integrando IA (Aurora) para análise inteligente de dados BIM no Speckle.
 """
 
+import os
 from pydantic import Field, SecretStr
 from speckle_automate import (
     AutomateBase,
     AutomationContext,
     execute_automate_function,
 )
-
+from openai import OpenAI
 from flatten import flatten_base
 
-
 class FunctionInputs(AutomateBase):
-    """These are function author-defined values.
-
-    Automate will make sure to supply them matching the types specified here.
-    Please use the pydantic model schema to define your inputs:
-    https://docs.pydantic.dev/latest/usage/models/
-    """
-
-    # An example of how to use secret values.
-    whisper_message: SecretStr = Field(title="This is a secret message")
-    forbidden_speckle_type: str = Field(
-        title="Forbidden speckle type",
-        description=(
-            "If a object has the following speckle_type,"
-            " it will be marked with an error."
-        ),
+    """Parâmetros de entrada para a função Aurora AI."""
+    
+    openai_api_key: SecretStr = Field(
+        title="OpenAI API Key",
+        description="Chave para acessar o modelo Aurora/GPT para análise."
     )
-
+    analysis_prompt: str = Field(
+        default="Analise os seguintes objetos BIM e identifique possíveis inconsistências ou otimizações.",
+        title="Prompt de Análise",
+        description="O que você quer que a Aurora analise nos dados?"
+    )
 
 def automate_function(
     automate_context: AutomationContext,
     function_inputs: FunctionInputs,
 ) -> None:
-    """This is an example Speckle Automate function.
-
-    Args:
-        automate_context: A context-helper object that carries relevant information
-            about the runtime context of this function.
-            It gives access to the Speckle project data that triggered this run.
-            It also has convenient methods for attaching results to the Speckle model.
-        function_inputs: An instance object matching the defined schema.
     """
-    # The context provides a convenient way to receive the triggering version.
+    Função que recebe dados do Speckle e os envia para análise via IA Aurora.
+    """
+    # 1. Receber dados do Speckle
     version_root_object = automate_context.receive_version()
+    flat_objects = list(flatten_base(version_root_object))
+    
+    # 2. Preparar sumário dos dados para a IA
+    # (Limitando para não exceder tokens em modelos menores)
+    object_types = {}
+    for obj in flat_objects[:100]:
+        t = obj.speckle_type
+        object_types[t] = object_types.get(t, 0) + 1
+    
+    data_summary = f"Total de objetos analisados (amostra): {len(flat_objects[:100])}\n"
+    data_summary += "Tipos encontrados:\n"
+    for t, count in object_types.items():
+        data_summary += f"- {t}: {count}\n"
 
-    objects_with_forbidden_speckle_type = [
-        b
-        for b in flatten_base(version_root_object)
-        if b.speckle_type == function_inputs.forbidden_speckle_type
-    ]
-    count = len(objects_with_forbidden_speckle_type)
-
-    if count > 0:
-        # This is how a run is marked with a failure cause.
-        automate_context.attach_error_to_objects(
-            category="Forbidden speckle_type"
-            f" ({function_inputs.forbidden_speckle_type})",
-            affected_objects=objects_with_forbidden_speckle_type,
-            message="This project should not contain the type: "
-            f"{function_inputs.forbidden_speckle_type}",
+    # 3. Chamar a API da OpenAI (Aurora)
+    try:
+        client = OpenAI(api_key=function_inputs.openai_api_key.get_secret_value())
+        response = client.chat.completions.create(
+            model="gpt-4o-mini", # Usando um modelo eficiente
+            messages=[
+                {"role": "system", "content": "Você é a Aurora, uma especialista em análise de dados BIM e Speckle."},
+                {"role": "user", "content": f"{function_inputs.analysis_prompt}\n\nDados do Modelo:\n{data_summary}"}
+            ]
         )
-        automate_context.mark_run_failed(
-            "Automation failed: "
-            f"Found {count} object that have one of the forbidden speckle types: "
-            f"{function_inputs.forbidden_speckle_type}"
-        )
+        
+        analysis_result = response.choices[0].message.content
+        
+        # 4. Anexar resultado ao Speckle
+        automate_context.mark_run_success(f"Análise Aurora concluída: {analysis_result[:200]}...")
+        
+        # Salvar relatório completo como arquivo de resultado
+        with open("relatorio_aurora.md", "w") as f:
+            f.write(f"# Relatório de Análise Aurora AI\n\n{analysis_result}")
+        
+        automate_context.store_file_result("relatorio_aurora.md")
 
-        # Set the automation context view to the original model/version view
-        # to show the offending objects.
-        automate_context.set_context_view()
+    except Exception as e:
+        automate_context.mark_run_failed(f"Falha na integração com Aurora AI: {str(e)}")
 
-    else:
-        automate_context.mark_run_success("No forbidden types found.")
-
-    # If the function generates file results, this is how it can be
-    # attached to the Speckle project/model
-    # automate_context.store_file_result("./report.pdf")
-
-
-def automate_function_without_inputs(automate_context: AutomationContext) -> None:
-    """A function example without inputs.
-
-    If your function does not need any input variables,
-     besides what the automation context provides,
-     the inputs argument can be omitted.
-    """
-    pass
-
-
-# make sure to call the function with the executor
 if __name__ == "__main__":
-    # NOTE: always pass in the automate function by its reference; do not invoke it!
-
-    # Pass in the function reference with the inputs schema to the executor.
     execute_automate_function(automate_function, FunctionInputs)
-
-    # If the function has no arguments, the executor can handle it like so
-    # execute_automate_function(automate_function_without_inputs)
