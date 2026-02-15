@@ -21,9 +21,9 @@ class FunctionInputs(AutomateBase):
         description="Chave para acessar o modelo Aurora/GPT para análise."
     )
     analysis_prompt: str = Field(
-        default="Analise os seguintes objetos BIM e identifique possíveis inconsistências ou otimizações.",
-        title="Prompt de Análise",
-        description="O que você quer que a Aurora analise nos dados?"
+        default="Realize uma auditoria técnica rigorosa. Verifique se há duplicidade de IDs, inconsistências de materiais e se a hierarquia espacial faz sentido para um modelo de construção.",
+        title="Prompt de Análise Avançada",
+        description="Instruções específicas para a auditoria de IA."
     )
 
 def automate_function(
@@ -37,17 +37,27 @@ def automate_function(
     version_root_object = automate_context.receive_version()
     flat_objects = list(flatten_base(version_root_object))
     
-    # 2. Preparar sumário dos dados para a IA
-    # (Limitando para não exceder tokens em modelos menores)
+    # 2. Preparar sumário detalhado e validação de regras
     object_types = {}
-    for obj in flat_objects[:100]:
+    missing_params = []
+    for obj in flat_objects[:150]:
         t = obj.speckle_type
         object_types[t] = object_types.get(t, 0) + 1
-    
-    data_summary = f"Total de objetos analisados (amostra): {len(flat_objects[:100])}\n"
-    data_summary += "Tipos encontrados:\n"
+        
+        # Regra de negócio: Objetos estruturais devem ter material definido
+        if "Structure" in t and not hasattr(obj, "material"):
+            missing_params.append(f"Objeto {obj.id} ({t}) sem material definido.")
+
+    data_summary = f"Relatório de Dados BIM:\n"
+    data_summary += f"- Total de objetos: {len(flat_objects)}\n"
+    data_summary += f"- Amostra para análise profunda: {len(flat_objects[:150])}\n"
+    data_summary += "Distribuição de tipos:\n"
     for t, count in object_types.items():
-        data_summary += f"- {t}: {count}\n"
+        data_summary += f"  * {t}: {count}\n"
+    
+    if missing_params:
+        data_summary += "\nInconsistências detectadas por regras locais:\n"
+        data_summary += "\n".join(missing_params[:10])
 
     # 3. Chamar a API da OpenAI (Aurora)
     try:
