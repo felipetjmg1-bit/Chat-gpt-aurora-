@@ -1,73 +1,76 @@
-![Status: Experimental](https://img.shields.io/badge/Status-Experimental-blue) | [![Licença Apache-2.0](https://img.shields.io/github/license/felipetjmg1-bit/Chat-gpt-aurora-)](LICENSE) | [![Patrocinar](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/felipetjmg1-bit)
+# Aurora Chat IA
 
-# Aurora i.a— Interface Gradio
+**[Protótipo funcional]** Interface conversacional em português construída com Gradio e integrada à API OpenAI. A aplicação depende de uma chave válida do provedor e de conectividade externa. Não é um modelo local nem oferece soberania ou residência de dados por si só.
 
-## Visão geral
+## Problema e objetivo
 
-A interface de produto efetivamente implementada é um chat em português do Brasil construído com Gradio que envia mensagens e histórico limitado para a API OpenAI; o modelo padrão é gpt-4o-mini, configurável por OPENAI_MODEL. O repositório também mantém uma trilha distinta de função Speckle Automate para análise de dados BIM, descrita em main.py e publicada por workflow próprio.
+Disponibilizar uma interface simples para enviar mensagens e um histórico limitado a um modelo configurado por variável de ambiente. O projeto pode servir como demonstração de integração de aplicações de IA para usuários e empresas brasileiras.
 
-## Objetivo e valor
+## O que está implementado
 
-**Problema/escopo:** Interface conversacional em português com Gradio e API OpenAI, configurável por ambiente e pronta para Hugging Face Spaces.
+- Interface Gradio montada em `aurora_app/ui.py`.
+- Serviço de conversação em `aurora_app/service.py`.
+- Configuração por `OPENAI_API_KEY` e `OPENAI_MODEL` em `aurora_app/config.py`.
+- Ponto de entrada `app.py`.
+- Testes existentes em `tests/`.
+- Uma trilha Speckle Automate separada, com arquivos `main.py` e `flatten.py`; ela não faz parte do fluxo de chat Gradio.
 
-**Valor verificável hoje:** o repositório torna explícitos seus artefatos, interfaces e limitações para que mantenedores e contribuidores possam avaliar o que existe sem confundir demonstração, proposta e produção.
+## Como executar
 
-## Arquitetura e tecnologias
+Requisitos: Python 3.11 ou superior.
 
-Parcialmente documentada e verificável para a aplicação Gradio: app.py chama aurora_app.ui.build_demo; a interface usa aurora_app.service.complete_chat, que lê configuração em aurora_app.config.Settings e chama a API OpenAI. Existe também uma arquitetura separada de função Speckle Automate em main.py, apoiada por flatten.py, com workflow de publicação Speckle; não está documentada como parte do fluxo do chat. O workflow e o pyproject.toml parecem conservar a trilha/template Speckle, enquanto README e requirements.txt enfatizam o Space Gradio.
-
-```mermaid
-flowchart LR
-  U[Usuário] --> G[Interface Gradio]
-  G --> S[Serviço Python]
-  S --> O[API OpenAI]
-  O --> G
+```bash
+git clone https://github.com/felipetjmg1-bit/Chat-gpt-aurora-.git
+cd Chat-gpt-aurora-
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-- Python (linguagem predominante informada pela API do GitHub).
-- Gradio 5.x para interface; requirements.txt declara gradio>=5.0.0,<6.0.0 e OpenAI Python SDK 1.x–2.x.
-- API OpenAI Chat Completions; OPENAI_API_KEY obrigatória para o chat e OPENAI_MODEL opcional, com padrão gpt-4o-mini.
-- A trilha separada Speckle Automate usa specklepy, speckle-automate, Pydantic e OpenAI, conforme pyproject.toml.
-- Dockerfile baseado em python:3.11-slim; pyproject.toml declara Python >=3.11.
-- Metadados no README declaram Hugging Face Space com Gradio e sdk_version 5.0.0.
-- Testes Python estão presentes sob tests/ e pytest aparece como dependência opcional de desenvolvimento; não afirmo que tenham sido executados.
-- A API de linguagens do GitHub lista Python e Dockerfile.
+Defina a chave no ambiente sem colocá-la no código ou no Git:
 
-## Início rápido
+```bash
+export OPENAI_API_KEY="SUA_CHAVE_LOCAL"
+export OPENAI_MODEL="gpt-4o-mini"
+python app.py
+```
 
-Os comandos abaixo refletem instruções, manifestos ou pontos de entrada presentes no repositório. Dependências externas, segredos e serviços estão indicados quando aplicável; a presença de um comando não equivale a uma execução validada.
+No Windows PowerShell, use `$env:OPENAI_API_KEY="SUA_CHAVE_LOCAL"` e `$env:OPENAI_MODEL="gpt-4o-mini"`. A interface será disponibilizada pelo Gradio no endereço local informado no terminal.
 
-1. O python -m venv .venv
-2. Ative o ambiente (o README especifica: source .venv/bin/activate).
-3. O pip install -r requirements.txt
-4. Configure a chave localmente conforme o README: export OPENAI_API_KEY="sua_chave"; .env.example também lista OPENAI_MODEL="gpt-4o-mini" como valor de exemplo/opcional.
-5. O python app.py; app.py chama build_demo() e demo.launch() quando executado como script. Não executei a aplicação, portanto não confirmo resultado em runtime.
-6. O README também descreve publicação manual em Space Gradio com OPENAI_API_KEY em Settings → Secrets; isto é instrução documental, não uma publicação verificada.
+## Exemplo prático
 
+Na interface, envie uma pergunta como:
 
-## Exemplo de uso
+```text
+Explique soberania digital em linguagem simples.
+```
 
-Na interface real há exemplos clicáveis, incluindo “Explique soberania digital em linguagem simples.” Também é possível escrever uma pergunta própria na caixa Mensagem. O serviço requer OPENAI_API_KEY válida configurada no ambiente; esta verificação descreve os controles e código existentes, não confirma uma resposta em execução.
+A aplicação encaminha a mensagem e o histórico limitado ao serviço configurado na API OpenAI. A resposta depende da disponibilidade do provedor, da chave, do modelo selecionado e dos limites da conta. Este exemplo descreve o fluxo do código; não é uma saída de execução capturada.
 
-## Estado e limitações
+## Estrutura
 
-**Maturidade indicada:** Experimental.
+- `app.py`: inicialização da interface.
+- `aurora_app/`: configuração, serviço e UI.
+- `tests/`: testes automatizados existentes.
+- `example.function_inputs.json`: exemplo de entrada de função.
+- `main.py` e `flatten.py`: trilha separada de Speckle Automate.
+- `.env.example`: nomes de variáveis sem credenciais válidas.
+- `requirements.txt` e `pyproject.toml`: dependências de trilhas distintas; confira os respectivos escopos antes de instalar extras.
 
-- Não executei comandos, testes, build ou deploy; os comandos de instalação/execução acima são os documentados e o ponto de entrada foi confirmado por leitura do código.
-- Não apresentar o projeto como conectado a um ecossistema Aurora ou oferecendo soberania, privacidade, segurança ou residência brasileira garantidas: a interface chama a API OpenAI e o README condiciona tais propriedades à infraestrutura/provedor/contratos escolhidos.
-- A descrição do README como API compatível com OpenAI é mais ampla do que a configuração observada: aurora_app.service cria OpenAI(api_key=...) sem configuração de base_url visível.
-- Não confundir exemplos da UI e testes existentes com recursos validados em runtime; o workflow público inspecionado é de publicação Speckle, não pipeline de testes ou deploy Gradio.
+## Segurança, privacidade e limitações
 
-## Contribuição
+- A chave da API deve ser mantida em segredo do ambiente ou no gerenciador de secrets do serviço de hospedagem. Nunca a publique em commits, issues ou capturas de tela.
+- Mensagens e histórico são enviados ao provedor externo configurado. Avalie os termos, retenção, região, contrato e configurações de privacidade do provedor antes de tratar dados pessoais.
+- Não envie dados pessoais sensíveis, credenciais, informações sigilosas ou dados de terceiros sem base legal, autorização e avaliação adequada.
+- O repositório não implementa, por si só, autenticação corporativa, controle multiusuário, gestão de consentimento, política de retenção ou residência nacional de dados.
+- O modelo padrão é configurável; a aplicação não comprova precisão, imparcialidade ou adequação para decisões de alto impacto.
+- A trilha Speckle Automate é independente e exige configuração própria. Não confunda sua existência com funcionalidade integrada ao chat.
 
-Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de abrir uma issue ou pull request. Para reportes de segurança, siga a orientação específica do repositório, se houver.
+## Testes e dependências
+
+Execute `pytest -q` para rodar os testes presentes. Não afirmamos que tenham sido executados nesta PR. `requirements.txt` declara faixas de Gradio e OpenAI SDK, não um lockfile com versões totalmente fixadas.
 
 ## Licença
 
-Este repositório está licenciado sob **Apache-2.0**; consulte [LICENSE](LICENSE).
-
-## Patrocínio e apoio
-
-O desenvolvimento aberto exige tempo para manutenção, documentação, testes, revisão de contribuições e resposta a issues. Se este projeto for útil, considere apoiar a continuidade pelo [GitHub Sponsors](https://github.com/sponsors/felipetjmg1-bit). O apoio não representa promessa de funcionalidades, prazo de entrega ou suporte comercial.
-
-[![Patrocinar felipetjmg1-bit](https://img.shields.io/badge/Patrocinar%20no-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/felipetjmg1-bit)
+Apache-2.0. Consulte [LICENSE](LICENSE).
