@@ -1,5 +1,8 @@
 # Aurora Chat IA
 
+<p align="center"><img src="PROJECT-OVERVIEW.svg" alt="Diagrama de funcionalidades de Aurora Chat IA" width="100%"></p>
+
+
 **[Protótipo funcional]** Interface conversacional em português construída com Gradio e integrada à API OpenAI. A aplicação depende de uma chave válida do provedor e de conectividade externa. Não é um modelo local nem oferece soberania ou residência de dados por si só.
 
 ## Problema e objetivo
@@ -74,3 +77,6 @@ Execute `pytest -q` para rodar os testes presentes. Não afirmamos que tenham si
 ## Licença
 
 Apache-2.0. Consulte [LICENSE](LICENSE).
+
+
+**Empresa responsável:** Impulso Digital Soluções em IA.
