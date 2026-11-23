@@ -6,7 +6,7 @@ Interface conversacional em português com provedor configurável.
 
 Definir OPENAI_API_KEY e OPENAI_MODEL no ambiente.
 
-## 2. INICIAR A INTERFACE
+## 2. INICIAR INTERFACE
 
 Executar app.py e carregar a interface Gradio.
 
@@ -21,8 +21,7 @@ aurora_app/service.py encaminha a solicitação ao provedor.
 ## 5. EXIBIR RESPOSTA
 
 A interface mostra o retorno e mantém histórico limitado.
+
 ## Resultado e limites
 
 Experiência conversacional ligada a serviço externo. Requer chave e conectividade.
-
-Este guia descreve o fluxo documentado no repositório. Recursos futuros devem ser identificados como planejados, e não como funcionalidades já disponíveis.
